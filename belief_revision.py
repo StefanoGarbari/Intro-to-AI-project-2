@@ -6,21 +6,24 @@ class Formula(ABC):
     def __str__(self) -> str:
         pass
 
-@dataclass(frozen=True)
+    def __repr__(self):
+        return self.__str__()
+
+@dataclass(frozen=True, repr=False)
 class Proposition(Formula):
     name: str
 
     def __str__(self):
         return self.name
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class Negation(Formula):
     formula: Formula
 
     def __str__(self):
         return f"¬{self.formula}"
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class Conjunction(Formula):
     left: Formula
     right: Formula
@@ -28,7 +31,7 @@ class Conjunction(Formula):
     def __str__(self):
         return f"({self.left} ∧ {self.right})"
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class Disjunction(Formula):
     left: Formula
     right: Formula
@@ -36,7 +39,7 @@ class Disjunction(Formula):
     def __str__(self):
         return f"({self.left} ∨ {self.right})"
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class Implication(Formula):
     left: Formula
     right: Formula
@@ -44,7 +47,7 @@ class Implication(Formula):
     def __str__(self):
         return f"({self.left} → {self.right})"
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class BiImplication(Formula):
     left: Formula
     right: Formula
@@ -188,7 +191,7 @@ def distribute_to_cnf(f: Formula) -> Formula:
         
         # Implications, bi-implications and negations are handled by the steps before
 
-def to_cnf(formula: Formula) -> CNF:
+def formula_to_cnf(formula: Formula) -> CNF:
     f = eliminate_implications(formula)
     f = to_nnf(f)
     f = distribute_to_cnf(f)
@@ -196,9 +199,87 @@ def to_cnf(formula: Formula) -> CNF:
     clauses = clauses_of(f)
     return CNF(frozenset(clauses))
 
+
+def negate_literal(lit: Literal) -> Literal:
+    return Literal(lit.name, not lit.negated)
+
+def is_tautology(clause: Clause) -> bool:
+    for lit in clause.literals:
+        if negate_literal(lit) in clause.literals:
+            return True
+    return False
+
+def resolve(c1: Clause, c2: Clause) -> set[Clause]:
+    """
+    Returns all possible resolvents
+    """
+    resolvents = set()
+
+    for lit in c1.literals:
+        comp = negate_literal(lit)
+
+        if comp in c2.literals:
+            new_literals = c1.literals.union(c2.literals) - {lit, comp}
+            resolvent = Clause(frozenset(new_literals))
+            if not is_tautology(resolvent):  # ← skip tautologies
+                resolvents.add(resolvent)
+    return resolvents
+
+def resolution(cnf: CNF) -> bool:
+    """
+    returns True if UNSAT (derives empty clause)
+    """
+
+    clauses = set(cnf.clauses)
+
+    while True:
+        new = set()
+
+        clause_list = list(clauses)
+
+        for i in range(len(clause_list)):
+            for j in range(i + 1, len(clause_list)):
+                c1 = clause_list[i]
+                c2 = clause_list[j]
+
+                resolvents = resolve(c1, c2)
+
+                # empty clause found → UNSAT
+                if Clause(frozenset()) in resolvents:
+                    return True
+
+                new.update(resolvents)
+
+        # no progress → SAT
+        if new.issubset(clauses):
+            return False
+
+        clauses.update(new)
+
+def set_to_cnf(kb: set[Formula]) -> CNF:
+    clauses = set()
+
+    for f in kb:
+        clauses |= formula_to_cnf(f).clauses
+
+    return CNF(frozenset(clauses))
+
+def entails(kb: set[Formula], phi: Formula) -> bool:
+    kb_cnf = set_to_cnf(kb)
+    neg_phi = formula_to_cnf(Negation(phi))
+
+    combined = CNF(kb_cnf.clauses.union(neg_phi.clauses))
+
+    return resolution(combined)
+
+
 # tests
-f = BiImplication(Proposition("r"), Disjunction(Proposition("p"), Proposition("s")))
-e = to_cnf(f)
-print(f)
-print(e)
-print(f == e)
+kb = {
+    BiImplication(Proposition("r"), Disjunction(Proposition("p"), Proposition("s"))),
+    Negation(Proposition("r")),
+}
+phi = Negation(Proposition("p"))
+
+print("KB:", kb)
+print("phi:", phi)
+print(entails(kb, phi))
