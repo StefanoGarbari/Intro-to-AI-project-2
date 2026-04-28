@@ -273,6 +273,18 @@ def entails(kb: set[Formula], phi: Formula) -> bool:
     return resolution(combined)
 
 
+def contraction(kb: set[Formula], phi: Formula) -> set[Formula]:
+    # TODO implement contraction
+    pass
+
+def expansion(kb: set[Formula], phi: Formula) -> set[Formula]:
+    return kb.union({phi})
+
+def revision(kb: set[Formula], phi: Formula) -> set[Formula]:
+    contracted = contraction(kb, Negation(phi))
+    revised = expansion(contracted, phi)
+    return revised
+
 # tests
 kb = {
     BiImplication(Proposition("r"), Disjunction(Proposition("p"), Proposition("s"))),
