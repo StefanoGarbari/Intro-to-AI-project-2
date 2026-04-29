@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from itertools import combinations
 
 class Formula(ABC):
     @abstractmethod
@@ -244,13 +245,11 @@ def resolution(cnf: CNF) -> bool:
 
                 resolvents = resolve(c1, c2)
 
-                # empty clause found → UNSAT
                 if Clause(frozenset()) in resolvents:
                     return True
 
                 new.update(resolvents)
 
-        # no progress → SAT
         if new.issubset(clauses):
             return False
 
@@ -272,6 +271,31 @@ def entails(kb: set[Formula], phi: Formula) -> bool:
 
     return resolution(combined)
 
+def remainder_sets(kb: set[Formula], phi: Formula) -> list[set[Formula]]:
+    """
+    Returns all maximal subsets of kb that do not entail phi (kb ⊥ phi).
+    """
+    if not entails(kb, phi):
+        return [kb]
+
+    remainders = []
+    kb_list = list(kb)
+
+    # TODO check if there is a more optimized way to do this
+    for size in range(len(kb_list) - 1, -1, -1):
+        for subset_tuple in combinations(kb_list, size):
+            subset = set(subset_tuple)
+
+            # Check maximality
+            if any(subset < r for r in remainders):
+                continue
+
+            if entails(subset, phi):
+                continue
+
+            remainders.append(subset)
+
+    return remainders
 
 def contraction(kb: set[Formula], phi: Formula) -> set[Formula]:
     # TODO implement contraction
@@ -295,3 +319,14 @@ phi = Negation(Proposition("p"))
 print("KB:", kb)
 print("phi:", phi)
 print(entails(kb, phi))
+
+# test reminder sets
+print(remainder_sets({Proposition("a"),
+                      Proposition("b"),
+                      Proposition("c"),
+                      Proposition("d"),
+                      Proposition("e"),
+                      BiImplication(Proposition("e"), Proposition("d")),
+                      BiImplication(Proposition("p"), Proposition("d")),
+                      },
+                      Proposition("p"),))
