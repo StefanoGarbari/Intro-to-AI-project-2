@@ -271,9 +271,9 @@ def entails(kb: set[Formula], phi: Formula) -> bool:
 
     return resolution(combined)
 
-def remainder_sets(kb: set[Formula], phi: Formula) -> list[set[Formula]]:
+def remainder_set(kb: set[Formula], phi: Formula) -> list[set[Formula]]:
     """
-    Returns all maximal subsets of kb that do not entail phi (kb ⊥ phi).
+    Returns the set of all maximal subsets of kb that do not entail phi (kb ⊥ phi).
     """
     if not entails(kb, phi):
         return [kb]
@@ -321,12 +321,9 @@ print("phi:", phi)
 print(entails(kb, phi))
 
 # test reminder sets
-print(remainder_sets({Proposition("a"),
-                      Proposition("b"),
-                      Proposition("c"),
-                      Proposition("d"),
-                      Proposition("e"),
-                      BiImplication(Proposition("e"), Proposition("d")),
-                      BiImplication(Proposition("p"), Proposition("d")),
+print(remainder_set({Proposition("p"),
+                      Conjunction(Proposition("p"), Proposition("q")),
+                      Disjunction(Proposition("p"), Proposition("q")),
+                      BiImplication(Proposition("p"), Proposition("q")),
                       },
                       Proposition("p"),))
