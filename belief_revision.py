@@ -306,7 +306,12 @@ def selection(reminder: list[set[Formula]]) -> list[set[Formula]]:
     #for x in reminder:
     #    print(x, "  ", sum(formula_scores[f] for f in x))
 
-    return [max(reminder, key=lambda x: sum(formula_scores[f] for f in x))]
+    max_score = max(sum(formula_scores[f] for f in x) for x in reminder)
+
+    return [
+        x for x in reminder
+        if sum(formula_scores[f] for f in x) == max_score
+    ]
 
 
 def contraction(kb: set[Formula], phi: Formula) -> set[Formula]:
