@@ -301,11 +301,31 @@ def remainder_set(kb: set[Formula], phi: Formula) -> list[set[Formula]]:
 
     return remainders
 
-def score(f: Formula, reminder: list[set[Formula]]):
-    return sum(1 for s in reminder if f in s)
+def score(f: Formula):
+    """
+    Calculates a score for each formula
+    """
+    match f:
+        case Proposition():
+            return 1
+
+        case Negation(x):
+            return score(x)
+
+        case Disjunction(a, b):
+            return score(a) + score(b)
+
+        case Conjunction(a, b):
+            return score(a) + score(b)
+
+        case Implication(a, b):
+            return 1 + score(a) + score(b)
+
+        case BiImplication(a, b):
+            return 1 + score(a) + score(b)
 
 def selection(reminder: list[set[Formula]]) -> list[set[Formula]]:
-    formula_scores = {f: score(f, reminder) for f in set.union(*reminder)}
+    formula_scores = {f: score(f) for f in set.union(*reminder)}
 
     #for x in reminder:
     #    print(x, "  ", sum(formula_scores[f] for f in x))
@@ -345,11 +365,11 @@ def revision(kb: set[Formula], phi: Formula) -> set[Formula]:
 
 example_set = {
     Proposition("a"),
-    Proposition("b"),
+    BiImplication(Proposition("a"), Proposition("b")),
     #BiImplication(Proposition("a"), Proposition("b")),
     BiImplication(Proposition("d"), Proposition("p")),
 }
-phi = BiImplication(Proposition("a"), Proposition("b"))
+phi = Proposition("b")
 #rem = remainder_set(setex, f)
 #print(setex, "⊥", f, "=", rem)
 
