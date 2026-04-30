@@ -231,7 +231,8 @@ def resolution(cnf: CNF) -> bool:
     returns True if UNSAT (derives empty clause)
     """
 
-    clauses = set(cnf.clauses)
+    # Filter out any tautological clauses up front
+    clauses = {c for c in cnf.clauses if not is_tautology(c)}
 
     while True:
         new = set()
@@ -295,6 +296,9 @@ def remainder_set(kb: set[Formula], phi: Formula) -> list[set[Formula]]:
 
             remainders.append(subset)
 
+    if not remainders:
+        return [set()]
+
     return remainders
 
 def score(f: Formula, reminder: list[set[Formula]]):
@@ -329,27 +333,28 @@ def revision(kb: set[Formula], phi: Formula) -> set[Formula]:
     return revised
 
 # tests
-kb = {
-    BiImplication(Proposition("r"), Disjunction(Proposition("p"), Proposition("s"))),
-    Negation(Proposition("r")),
-}
-phi = Negation(Proposition("p"))
+#kb = {
+#    BiImplication(Proposition("r"), Disjunction(Proposition("p"), Proposition("s"))),
+#    Negation(Proposition("r")),
+#}
+#phi = Negation(Proposition("p"))
 
 #print("KB:", kb)
 #print("phi:", phi)
 #print(entails(kb, phi))
-#⊨⊭
-# test reminder sets
-setex = {
+
+example_set = {
     Proposition("a"),
     Proposition("b"),
-    Proposition("c"),
-    Proposition("d"),
-    Proposition("e"),
-    BiImplication(Proposition("e"), Proposition("d")),
+    #BiImplication(Proposition("a"), Proposition("b")),
     BiImplication(Proposition("d"), Proposition("p")),
 }
-f = Proposition("p")
+phi = BiImplication(Proposition("a"), Proposition("b"))
 #rem = remainder_set(setex, f)
 #print(setex, "⊥", f, "=", rem)
-print(contraction(setex, f))
+
+contracted = contraction(example_set, phi)
+extended = expansion(contracted, phi)
+print(example_set)
+print(contracted)
+print(extended)
