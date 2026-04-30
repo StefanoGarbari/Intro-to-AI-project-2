@@ -312,7 +312,7 @@ def selection(reminder: list[set[Formula]]) -> list[set[Formula]]:
 def contraction(kb: set[Formula], phi: Formula) -> set[Formula]:
     reminder = remainder_set(kb, phi)
     selected = selection(reminder)
-    partial_meet_contraction = set.union(*selected)
+    partial_meet_contraction = set.intersection(*selected)
     return partial_meet_contraction
 
 def expansion(kb: set[Formula], phi: Formula) -> set[Formula]:
