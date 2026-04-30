@@ -351,30 +351,3 @@ def revision(kb: set[Formula], phi: Formula) -> set[Formula]:
     contracted = contraction(kb, Negation(phi))
     revised = expansion(contracted, phi)
     return revised
-
-# tests
-#kb = {
-#    BiImplication(Proposition("r"), Disjunction(Proposition("p"), Proposition("s"))),
-#    Negation(Proposition("r")),
-#}
-#phi = Negation(Proposition("p"))
-
-#print("KB:", kb)
-#print("phi:", phi)
-#print(entails(kb, phi))
-
-example_set = {
-    Proposition("a"),
-    BiImplication(Proposition("a"), Proposition("b")),
-    #BiImplication(Proposition("a"), Proposition("b")),
-    BiImplication(Proposition("d"), Proposition("p")),
-}
-phi = Proposition("b")
-#rem = remainder_set(setex, f)
-#print(setex, "⊥", f, "=", rem)
-
-contracted = contraction(example_set, phi)
-extended = expansion(contracted, phi)
-print(example_set)
-print(contracted)
-print(extended)
