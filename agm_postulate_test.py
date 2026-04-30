@@ -2,27 +2,54 @@ from belief_revision import Formula, Proposition, Negation, Conjunction, Disjunc
 from belief_revision import expansion, revision, contraction, entails
 import unittest
 
+class AGMTestCase(unittest.TestCase):
+    """Base class with shared AGM helper methods."""
 
-class TestContractionPostulates(unittest.TestCase):
+    def assertEquivalentBeliefSets(self, kb1: set[Formula], kb2: set[Formula]):
+        # to check equivalency of two sets, we check that each formula of the first
+        # set is entailed by the second set, and vice versa (mutual entailment)
+        for formula in kb1:
+            self.assertTrue(entails(kb2, formula))
+        for formula in kb2:
+            self.assertTrue(entails(kb1, formula))
+
+class TestContractionPostulates(AGMTestCase):
     """
     AGM÷ Rationality Postulates of Contraction
     """
+    
+    def setUp(self):
+        self.kb = {
+            Proposition("p"),
+            Implication(Proposition("p"), Proposition("q")),
+            Proposition("r"),
+        }
+
     def test_success(self):
-        pass
+        phi = Proposition("q") # not a tautology
+        result = contraction(self.kb, phi)
+        self.assertFalse(entails(result, phi))
     
     def test_inclusion(self):
-        pass
+        phi = Proposition("q")
+        result = contraction(self.kb, phi)
+        # if the base is a subset, then the set is a subset
+        self.assertTrue(result.issubset(self.kb))
 
     def test_vacuity(self):
-        pass
-
-    def test_consistency(self):#NO????
-        pass
+        phi = Proposition("x")
+        result = contraction(self.kb, phi)
+        # if the base is a subset, then the set is a subset
+        self.assertEquivalentBeliefSets(result, self.kb)
 
     def test_extensionality(self):
-        pass
+        phi = Implication(Proposition("p"), Proposition("q"))
+        psi = Disjunction(Negation(Proposition("p")), Proposition("q"))
+        contracted_phi = contraction(self.kb, phi)
+        contracted_psi = contraction(self.kb, psi)
+        self.assertEquivalentBeliefSets(contracted_phi, contracted_psi)
 
-class TestRevisionPostulates(unittest.TestCase):
+class TestRevisionPostulates(AGMTestCase):
     """
     AGM∗ Rationality Postulates of Revision
     """
@@ -37,19 +64,20 @@ class TestRevisionPostulates(unittest.TestCase):
     def test_success(self):
         phi = Negation(Proposition("q"))
         result = revision(self.kb, phi)
-        self.assertIn(phi, result)
+        self.assertTrue(entails(result, phi))
     
     def test_inclusion(self):
         phi = Negation(Proposition("q"))
         revised = revision(self.kb, phi)
         expanded = expansion(self.kb, phi)
+        # if the base is a subset, then the set is a subset
         self.assertTrue(revised.issubset(expanded))
 
     def test_vacuity(self):
         phi = Negation(Proposition("s"))
         revised = revision(self.kb, phi)
         expanded = expansion(self.kb, phi)
-        self.assertEqual(revised, expanded)
+        self.assertEquivalentBeliefSets(revised, expanded)
 
     def test_consistency(self):
         phi = Negation(Proposition("q"))
@@ -62,14 +90,7 @@ class TestRevisionPostulates(unittest.TestCase):
         psi = Disjunction(Negation(Proposition("a")), Proposition("b"))
         revised_phi = revision(self.kb, phi)
         revised_psi = revision(self.kb, psi)
-
-        # to check equivalency of two sets, we check that each formula of
-        # the first set is entailed by the second set, and vice versa
-        for formula in revised_phi:
-            self.assertTrue(entails(revised_psi, formula))
-
-        for formula in revised_psi:
-            self.assertTrue(entails(revised_phi, formula))
+        self.assertEquivalentBeliefSets(revised_phi, revised_psi)
 
 
 
