@@ -297,9 +297,23 @@ def remainder_set(kb: set[Formula], phi: Formula) -> list[set[Formula]]:
 
     return remainders
 
+def score(f: Formula, reminder: list[set[Formula]]):
+    return sum(1 for s in reminder if f in s)
+
+def selection(reminder: list[set[Formula]]) -> list[set[Formula]]:
+    formula_scores = {f: score(f, reminder) for f in set.union(*reminder)}
+
+    #for x in reminder:
+    #    print(x, "  ", sum(formula_scores[f] for f in x))
+
+    return [max(reminder, key=lambda x: sum(formula_scores[f] for f in x))]
+
+
 def contraction(kb: set[Formula], phi: Formula) -> set[Formula]:
-    # TODO implement contraction
-    pass
+    reminder = remainder_set(kb, phi)
+    selected = selection(reminder)
+    partial_meet_contraction = set.union(*selected)
+    return partial_meet_contraction
 
 def expansion(kb: set[Formula], phi: Formula) -> set[Formula]:
     return kb.union({phi})
@@ -316,14 +330,21 @@ kb = {
 }
 phi = Negation(Proposition("p"))
 
-print("KB:", kb)
-print("phi:", phi)
-print(entails(kb, phi))
-
+#print("KB:", kb)
+#print("phi:", phi)
+#print(entails(kb, phi))
+#⊨⊭
 # test reminder sets
-print(remainder_set({Proposition("p"),
-                      Conjunction(Proposition("p"), Proposition("q")),
-                      Disjunction(Proposition("p"), Proposition("q")),
-                      BiImplication(Proposition("p"), Proposition("q")),
-                      },
-                      Proposition("p"),))
+setex = {
+    Proposition("a"),
+    Proposition("b"),
+    Proposition("c"),
+    Proposition("d"),
+    Proposition("e"),
+    BiImplication(Proposition("e"), Proposition("d")),
+    BiImplication(Proposition("d"), Proposition("p")),
+}
+f = Proposition("p")
+#rem = remainder_set(setex, f)
+#print(setex, "⊥", f, "=", rem)
+print(contraction(setex, f))
