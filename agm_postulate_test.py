@@ -6,12 +6,28 @@ class AGMTestCase(unittest.TestCase):
     """Base class with shared AGM helper methods."""
 
     def assertEquivalentBeliefSets(self, kb1: set[Formula], kb2: set[Formula]):
-        # to check equivalency of two sets, we check that each formula of the first
-        # set is entailed by the second set, and vice versa (mutual entailment)
-        for formula in kb1:
-            self.assertTrue(entails(kb2, formula))
-        for formula in kb2:
-            self.assertTrue(entails(kb1, formula))
+        """
+        Checks wheather the belief sets Cn(kb1) and Cn(kb2) are equivalent.
+        NOTE: kb1 and kb2 are belief bases, not belief sets.
+        """
+
+        # Cn(kb1) ⊆ Cn(kb2)
+        self.assertSubsetBeliefSet(kb1, kb2)
+
+        # Cn(kb2) ⊆ Cn(kb1)
+        self.assertSubsetBeliefSet(kb2, kb1)
+    
+    def assertSubsetBeliefSet(self, kb_sub: set[Formula], kb_super: set[Formula]):
+        """
+        Checks whether the belief set Cn(kb_sub) is a subset of Cn(kb_super).
+        NOTE: kb_sub and kb_super are belief bases, not belief sets.
+        """
+
+        # Checks that every formula in kb_sub is entailed by kb_super. This means
+        # that any consequence of kb_sub is also a consequence of kb_super.
+
+        for formula in kb_sub:
+            self.assertTrue(entails(kb_super, formula))
 
 class TestContractionPostulates(AGMTestCase):
     """
@@ -34,7 +50,7 @@ class TestContractionPostulates(AGMTestCase):
         phi = Proposition("q")
         result = contraction(self.kb, phi)
         # if the base is a subset, then the set is a subset
-        self.assertTrue(result.issubset(self.kb))
+        self.assertSubsetBeliefSet(result, self.kb)
 
     def test_vacuity(self):
         phi = Proposition("x")
@@ -71,7 +87,7 @@ class TestRevisionPostulates(AGMTestCase):
         revised = revision(self.kb, phi)
         expanded = expansion(self.kb, phi)
         # if the base is a subset, then the set is a subset
-        self.assertTrue(revised.issubset(expanded))
+        self.assertSubsetBeliefSet(revised, expanded)
 
     def test_vacuity(self):
         phi = Negation(Proposition("s"))
