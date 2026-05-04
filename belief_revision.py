@@ -2,6 +2,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from itertools import combinations
 
+
+"""
+Lecture 8
+1. Every proposition letter (p, q, r, ...) is a formula.
+2. If ϕ is a formula, then ¬ϕ is also a formula.
+3. If ϕ1 and ϕ2 are formulas, then (ϕ1 ∧ ϕ2), (ϕ1 ∨ ϕ2), (ϕ1 → ϕ2) and (ϕ1 ↔ ϕ2) are also formulas.
+4. Nothing else is a formula.
+"""
 class Formula(ABC):
     @abstractmethod
     def __str__(self) -> str:
@@ -57,6 +65,10 @@ class BiImplication(Formula):
         return f"({self.left} ↔ {self.right})"
 
 
+"""
+Alternative rapresentation of formulas, specifically for CNF form.
+This makes resolution easier and more efficient.
+"""
 @dataclass(frozen=True)
 class Literal:
     name: str
@@ -327,9 +339,6 @@ def score(f: Formula):
 def selection(reminder: list[set[Formula]]) -> list[set[Formula]]:
     formula_scores = {f: score(f) for f in set.union(*reminder)}
 
-    #for x in reminder:
-    #    print(x, "  ", sum(formula_scores[f] for f in x))
-
     max_score = max(sum(formula_scores[f] for f in x) for x in reminder)
 
     return [
@@ -348,6 +357,7 @@ def expansion(kb: set[Formula], phi: Formula) -> set[Formula]:
     return kb.union({phi})
 
 def revision(kb: set[Formula], phi: Formula) -> set[Formula]:
+    #Revision with Levi identity
     contracted = contraction(kb, Negation(phi))
     revised = expansion(contracted, phi)
     return revised
